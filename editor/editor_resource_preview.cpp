@@ -361,7 +361,9 @@ void EditorResourcePreview::queue_edited_resource_preview(const Ref<Resource> &p
 void EditorResourcePreview::queue_resource_preview(const String &p_path, Object *p_receiver, const StringName &p_receiver_func, const Variant &p_userdata) {
 	ERR_FAIL_NULL(p_receiver);
 	{
-		MutexLock lock(preview_mutex);
+		std::printf("[DEBUG][EditorResourcePreview][queue_resource_preview]: Attempting to secure mutex lock.\n");//!Debugging
+		MutexLock lock(preview_mutex);//!CRASH HERE
+		std::printf("[DEBUG][EditorResourcePreview][queue_resource_preview]: Secured preview_mutex lock.\n");//!Debugging
 
 		if (cache.has(p_path)) {
 			cache[p_path].order = order++;

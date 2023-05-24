@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  editor_file_dialog.h                                                  */
+/*  file_dialog.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -92,8 +92,8 @@ private:
 	Button *makedir = nullptr;
 	Access access = ACCESS_RESOURCES;
 
-	VBoxContainer *vbox = nullptr;
-	FileMode mode = FILE_MODE_SAVE_FILE;
+	VBoxContainer *vbc = nullptr;
+	FileMode mode;
 	bool can_create_dir = false;
 	LineEdit *dir = nullptr;
 
@@ -104,19 +104,28 @@ private:
 	HBoxContainer *drives_container = nullptr;
 	HBoxContainer *shortcuts_container = nullptr;
 	OptionButton *drives = nullptr;
+
 	ItemList *item_list = nullptr;
 	PopupMenu *item_menu = nullptr;
 	TextureRect *preview = nullptr;
 	VBoxContainer *preview_vb = nullptr;
 	HSplitContainer *list_hb = nullptr;
+
 	HBoxContainer *file_box = nullptr;
 	LineEdit *file = nullptr;
 	OptionButton *filter = nullptr;
-	AcceptDialog *error_dialog = nullptr;
+
+	AcceptDialog *mkdirerr = nullptr;
+	AcceptDialog *exterr = nullptr;
+	AcceptDialog *error_dialog = nullptr;//Redundant?
+
 	Ref<DirAccess> dir_access;
 	ConfirmationDialog *confirm_save = nullptr;
 	DependencyRemoveDialog *dep_remove_dialog = nullptr;
 	ConfirmationDialog *global_remove_dialog = nullptr;
+
+	Tree *tree = nullptr;
+	Label *message = nullptr;
 
 	Button *mode_thumbnails = nullptr;
 	Button *mode_list = nullptr;
@@ -142,10 +151,16 @@ private:
 	int preview_wheel_index = 0;
 	float preview_wheel_timeout = 0.0f;
 
+	bool mode_overrides_title = true;
+	String root_subfolder;
+	String root_prefix;
+
 	static bool default_show_hidden_files;
 	static DisplayMode default_display_mode;
-	bool show_hidden_files;
+	static bool default_allow_display_mode_change;
+	bool show_hidden_files = false;
 	DisplayMode display_mode;
+	bool allow_display_mode_change;
 
 	bool disable_overwrite_warning = false;
 	bool is_invalidating = false;
@@ -175,6 +190,15 @@ private:
 		Ref<Texture2D> file_big_thumbnail;
 
 		Ref<Texture2D> progress[8]{};
+
+		Ref<Texture2D> file;
+		Color file_icon_color;
+		Color file_disabled_color;
+
+		Color icon_normal_color;
+		Color icon_hover_color;
+		Color icon_focus_color;
+		Color icon_pressed_color;
 	} theme_cache;
 
 	void update_dir();
@@ -184,26 +208,28 @@ private:
 
 	void _focus_file_text();
 
+	//Favorited
 	void _update_favorites();
 	void _favorite_pressed();
 	void _favorite_selected(int p_idx);
 	void _favorite_move_up();
 	void _favorite_move_down();
 
+	//Recents
 	void _update_recent();
 	void _recent_selected(int p_idx);
 
-	void _item_selected(int p_item);
-	void _multi_selected(int p_item, bool p_selected);
-	void _items_clear_selection(const Vector2 &p_pos, MouseButton p_mouse_button_index);
-	void _item_dc_selected(int p_item);
+	void _tree_multi_selected(Object *p_object, int p_cell, bool p_selected);
+	void _tree_selected();
 
 	void _item_list_item_rmb_clicked(int p_item, const Vector2 &p_pos, MouseButton p_mouse_button_index);
 	void _item_list_empty_clicked(const Vector2 &p_pos, MouseButton p_mouse_button_index);
 	void _item_menu_id_pressed(int p_option);
 
 	void _select_drive(int p_idx);
+	void _tree_item_activated();
 	void _dir_submitted(String p_dir);
+	void _file_submitted(const String &p_file);
 	void _action_pressed();
 	void _save_confirm_pressed();
 	void _cancel_pressed();
@@ -214,38 +240,29 @@ private:
 	void _delete_items();
 	void _delete_files_global();
 
-	void _update_drives(bool p_select = true);
-	void _update_icons();
-
 	void _go_up();
 	void _go_back();
 	void _go_forward();
 
+	void _change_dir(const String &p_new_dir);
+	void _update_drives(bool p_select = true);
+	void _update_icons();
+
 	void _invalidate();
-
-	virtual void _post_popup() override;
-
-	void _save_to_recent();
-	// Callback function is callback(String p_path,Ref<Texture2D> preview,Variant udata) preview null if could not load.
-
-	void _thumbnail_result(const String &p_path, const Ref<Texture2D> &p_preview, const Ref<Texture2D> &p_small_preview, const Variant &p_udata);
-	void _thumbnail_done(const String &p_path, const Ref<Texture2D> &p_preview, const Ref<Texture2D> &p_small_preview, const Variant &p_udata);
-	void _request_single_thumbnail(const String &p_path);
 
 	virtual void shortcut_input(const Ref<InputEvent> &p_event) override;
 
 	bool _is_open_should_be_disabled();
+
+	virtual void _post_popup() override;
 
 protected:
 	virtual void _update_theme_item_cache() override;
 
 	void _notification(int p_what);
 	static void _bind_methods();
-
+	//bind helpers
 public:
-	// Public for use with callable_mp.
-	void _file_submitted(const String &p_file);
-
 	void popup_file_dialog();
 	void clear_filters();
 	void add_filter(const String &p_filter, const String &p_description = "");
@@ -262,6 +279,12 @@ public:
 	void set_current_file(const String &p_file);
 	void set_current_path(const String &p_path);
 
+	void set_root_subfolder(const String &p_root);
+	String get_root_subfolder() const;
+
+	void set_mode_overrides_title(bool p_override);
+	bool is_mode_overriding_title() const;
+
 	void set_display_mode(DisplayMode p_mode);
 	DisplayMode get_display_mode() const;
 
@@ -274,18 +297,16 @@ public:
 	void set_access(Access p_access);
 	Access get_access() const;
 
-	static void set_default_show_hidden_files(bool p_show);
-	static void set_default_display_mode(DisplayMode p_mode);
 	void set_show_hidden_files(bool p_show);
 	bool is_showing_hidden_files() const;
 
+	static void set_default_show_hidden_files(bool p_show);
+	static void set_default_display_mode(DisplayMode p_mode);
+	static void set_default_allow_display_mode_change(bool p_allow);
+
 	void invalidate();
 
-	void set_disable_overwrite_warning(bool p_disable);
-	bool is_overwrite_warning_disabled() const;
-
-	void set_previews_enabled(bool p_enabled);
-	bool are_previews_enabled();
+	void deselect_all();
 
 	FileDialog();
 	~FileDialog();
@@ -295,4 +316,4 @@ VARIANT_ENUM_CAST(FileDialog::FileMode);
 VARIANT_ENUM_CAST(FileDialog::Access);
 VARIANT_ENUM_CAST(FileDialog::DisplayMode);
 
-#endif // EDITOR_FILE_DIALOG_H
+#endif // FILE_DIALOG_H
