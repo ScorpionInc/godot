@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  editor_file_dialog.cpp                                                */
+/*  file_dialog.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -370,14 +370,21 @@ void FileDialog::_thumbnail_result(const String &p_path, const Ref<Texture2D> &p
 	if (display_mode == DISPLAY_LIST) {
 		return;
 	}
+	/*
 	if(p_preview.is_null()) {
 		return;
-	}
+	}//*/
 
 	for (int i = 0; i < item_list->get_item_count(); i++) {
 		Dictionary d = item_list->get_item_metadata(i);
 		String pname = d["path"];
+		std::printf("[DEBUG][FileDialog][_thumbnail_result]: Generated for path: '");//!Debugging
+		std::printf(pname);//!Debugging
+		std::printf("'\n");//!Debugging
 		if (pname == p_path) {
+			if(p_preview.is_null()) {
+				return;
+			}
 			item_list->set_item_icon(i, p_preview);
 			item_list->set_item_tag_icon(i, Ref<Texture2D>());
 		}

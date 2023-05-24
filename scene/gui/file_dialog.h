@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  editor_file_dialog.h                                                  */
+/*  file_dialog.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -295,4 +295,4 @@ VARIANT_ENUM_CAST(FileDialog::FileMode);
 VARIANT_ENUM_CAST(FileDialog::Access);
 VARIANT_ENUM_CAST(FileDialog::DisplayMode);
 
-#endif // EDITOR_FILE_DIALOG_H
+#endif // FILE_DIALOG_H
