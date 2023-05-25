@@ -379,7 +379,7 @@ void FileDialog::_thumbnail_result(const String &p_path, const Ref<Texture2D> &p
 		Dictionary d = item_list->get_item_metadata(i);
 		String pname = d["path"];
 		std::printf("[DEBUG][FileDialog][_thumbnail_result]: Generated for path: '");//!Debugging
-		std::printf(pname);//!Debugging
+		//std::printf(d["path"]);//!Debugging
 		std::printf("'\n");//!Debugging
 		if (pname == p_path) {
 			if(p_preview.is_null()) {
