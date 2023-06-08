@@ -50,6 +50,7 @@ class FileAccessAndroid : public FileAccess {
 public:
 	static AAssetManager *asset_manager;
 
+	virtual String fix_path(const String &p_path) const override;
 	virtual Error open_internal(const String &p_path, int p_mode_flags) override; // open a file
 	virtual bool is_open() const override; // true when file is open
 
@@ -80,6 +81,9 @@ public:
 	virtual Error _set_unix_permissions(const String &p_file, uint32_t p_permissions) override { return FAILED; }
 
 	virtual void close() override;
+
+	static Error asset_to_file(const String &p_asset_path, const String &p_file_path);
+	Error save_to_file(const String &p_file_path);
 
 	~FileAccessAndroid();
 };
